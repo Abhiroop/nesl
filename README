@@ -1,0 +1,102 @@
+NESL RELEASE 3.1
+
+BASIC INFORMATION:
+
+NESL is a fine-grained, functional, nested data-parallel language.  The
+current implementation runs on workstations, the Connection Machines
+CM-2 and CM-5, Cray vector machines (Y-MP, J90, and C90), the MasPar,
+and most machines supporting MPI.  NESL code is fully portable across
+these machines, and for many applications it achieves performance
+comparable to machine specific code.  The implementation is based on an
+intermediate language called VCODE and a low-level vector library called
+CVL.
+
+HOW TO GET THE DISTRIBUTION:
+
+The full NESL distribution can be obtained via anonymous FTP from:
+	ftp://nesl.scandal.cs.cmu.edu/code/nesl/nesl.tar.Z
+or	ftp://nesl.scandal.cs.cmu.edu/code/nesl/nesl.tar.gz
+
+(If you have AFS, the release can also be obtained from:
+	/afs/cs.cmu.edu/project/scandal/public/code/nesl/nesl.tar.Z
+or	/afs/cs.cmu.edu/project/scandal/public/code/nesl/nesl.tar.gz
+
+Once copied over to your machine, it can be unpacked by running:
+	uncompress -c nesl.tar.Z | tar -xf -
+or	gunzip -c nesl.tar.gz | tar -xf -
+
+This will create a subdirectory called nesl in your current directory
+with the full distribution within that directory.  To build NESL run
+``make'' within the nesl directory (more details can be found in the
+BUILD file).
+
+REQUIREMENTS:
+
+You will need either GNU, Allegro, CMU, or Lucid Common Lisp to run
+NESL.  CMU and GNU Common Lisp are available for free.  See the FTP site
+at ftp://ftp.ma.utexas.edu/pub/gcl/ for information on GCL, or email
+slisp@cs.cmu.edu for information on CMU CL.  You will also need a
+Unix-like operating system (SunOS, AIX, HP-UX, Ultrix, Mach and Unicos
+work fine).
+
+For the full NESL release you will also need a C compiler, lex, yacc,
+and if you want the graphics routines, an X11 library.
+
+DISTRIBUTION CONTENTS:
+
+The current nesl distribution file (nesl.tar.Z) is approximately 1.3
+Megabytes (compressed), and includes the following:
+
+  BUILD           Directions on how to build NESL
+  COPYRIGHT       Copyright information
+  Makefile        Used for building the release
+  README          This file
+  bin/	         
+    runnesl       The NESL executable
+    vinterp.*     The VCODE interpreter, for various architectures
+    xneslplot     X11 interface used for NESL graphics
+    foreground.*  Scripts for executing VCODE from NESL in the foreground
+    background.*  Scripts for executing VCODE from NESL in the foreground
+  cvl/
+    cm2/	  Source code for the CM-2 version of CVL
+    cm5/	  Source code for the CM-5 version of CVL 
+    cray/	  Source code for the CRAY version of CVL
+    mpi/	  Source code for the MPI version of CVL
+    serial/	  Source code for the serial version of CVL
+  doc/		  
+    cvl.ps	  The CVL manual
+    manual.ps	  The NESL manual
+    user.ps	  The NESL user's guide
+    vcode-ref.ps  The VCODE manual
+  emacs/          NESL editing mode for GNU Emacs
+  examples/       Collection of NESL examples
+  include/	  cvl.h include file
+  lib/		  
+    libcvl.a	  The CVL library
+  neslseqsrc/     Source code for stand-alone NESL
+  neslsrc/        Source code for NESL
+  release.notes   List of changes since the last release
+  utils/          Source code for xneslplot
+  vcode/          Source code for the VCODE interpreter
+
+The directory 
+	ftp://nesl.scandal.cs.cmu.edu/code/nesl/nesl
+contains the contents of the tar file if you are only interested in 
+part of the distribution.
+
+MAILING LIST:
+
+To be added to the NESL mailing list, send e-mail to
+nesl-request@cs.cmu.edu.
+
+WEB PAGE:
+
+The SCANDAL project web page is the main online source of information, at
+	http://www.cs.cmu.edu/~scandal
+
+BUGS:
+
+Please send bug reports to nesl-bugs@cs.cmu.edu.  It should be noted
+that NESL is a research tool rather than a production system.  We will
+try to respond to your bugs as quickly as possible, but we can make no
+guarantees.

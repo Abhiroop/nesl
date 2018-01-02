@@ -1,0 +1,87 @@
+#! /bin/csh -f
+
+# This file is used to run VCODE from NESL on the CM-5 by copying the files 
+# over and then using remote execution.  See config.nesl for a sample CM-5
+# configuration.
+#
+# The arguments are:
+#  1: rsh_command --- e.g. "rsh -l joeuser foo.uvwk.edu"
+#                       (can be empty, in which case it is run locally)
+#  2: interp_file --- vcode interpreter executable
+#  3: memory_size --- memory size (in words; passed to the interpreter, and 
+#			also used to calculate job memory size requirements)
+#  4: temp_dir    --- temporary directory where files are stored
+#  5: job_name    --- the job_name (used to uniquely identify files)
+#  6: max_time    --- maximum number of seconds job is supposed to run
+#  7: arguments   --- any arguments (used to hold the number of processors
+#			to allocate on the CM-5)
+#  
+# The rsh_command, interp_file, memory_size, temp_dir, max_time, 
+# and arguments are passed directly from the configuration
+# specification in NESL.
+#
+# Room for improvement:
+#  1. It could probably be simplified if we assumed the existence of AFS,
+#     bash, a jrun that let you redirect stdout and stderr, etc...
+#  2. It should trap interrupts and clean up any pending jobs.
+#  3. It should check the datestamp of the remote vinterp and overwrite it
+#     if the local one is newer.
+#
+# We use compress, pipes, and rsh because (1) CMU SCS hasn't got rcp, and
+# (2) for big vcode source files we'll be bandwidth limited, so 
+# why not fire up a compress process instead of a cat process?
+
+set codefile = $4$5_code
+set outfile = $4$5_out
+
+set remote_interp = vinterp
+set remote_codefile = $5_code
+set remote_outfile = $5_out
+set remote_jsubfile = $5_submit
+
+# Work out how much memory to allocate per node.  There is 32Mb per node at
+# NCSA; assume 4M is taken up by O.S. and node code, and (a) warn the user if
+# they allocate more than 12M on top of that (scheduling will be slow), (b)
+# abort if they allocate more than 28M on top of that (impossible to fit).
+# $3 is words per processor.  $7 is number of processors
+set mb_per_node = `echo "($3 * 8) / ($7 * 1048576)" | bc`
+if ( $mb_per_node == 0 ) then
+  set mb_per_node = 1
+else if ( $mb_per_node > 28 ) then
+  echo "Unable to allocate $mb_per_node Mb per node"
+  exit  
+else if ( $mb_per_node > 12) then
+  echo "WARNING: allocating $mb_per_node Mb per node; may cause slow scheduling.."
+endif
+set total_mb = `echo "$7 * ($mb_per_node + 4)" | bc`
+
+# If interp_file isn't on the remote machine as "vinterp", copy it over
+set result=`$1 /bin/ls $remote_interp`
+if ($result != 'vinterp') then
+  echo "copying vinterp.."
+  compress -c $2 | $1 uncompress -c ">" $remote_interp
+  $1 chmod +x $remote_interp  
+endif
+
+# Copy over the VCODE code file
+compress -c $codefile | $1 uncompress -c ">" $remote_codefile
+
+# Copy over a jsub file
+(compress -c | $1 uncompress -c ">" $remote_jsubfile) << EOF
+#!/bin/sh
+#JSUB -processors $7
+#JSUB -cputime ${6}secs
+#JSUB -memory ${total_mb}mb
+#JSUB -exact_proc
+#JSUB -shell /bin/sh
+\$HOME/$remote_interp -m $3 \$HOME/$remote_codefile > \$HOME/$remote_outfile
+EOF
+
+# Submit the jsub file in the foreground (so we can watch its stderr)
+$1 jrun -nobell $remote_jsubfile 
+
+# Copy the output file back
+$1 compress -c $remote_outfile | uncompress -c > $outfile
+
+# Remove the files we created
+$1 rm -f $remote_jsubfile $remote_codefile $remote_outfile

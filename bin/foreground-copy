@@ -1,0 +1,38 @@
+#! /bin/csh -f
+
+# This file is used to run VCODE from NESL on a remote machine by
+# copying over the files and then using remote execution
+#
+# The argumets are:
+#  1: rsh_command --- e.g. "rsh -l joeuser foo.uvwk.edu" 
+#                       (can be empty, in which case it is run locally)
+#  2: interp_file --- vcode interpreter executable
+#  3: memory_size --- memory size (passed to the interpreter)
+#  4: temp_dir    --- temporary directory where files are stored
+#  5: job_name    --- the job_name (used to identify files)
+#  6: max_time    --- currently ignored.	
+#  7: arguments   --- any arguments (ignored)
+#  
+#  The rsh_command, interp_file, memory_size, temp_dir, max_time, 
+#  and arguments are passed directly from the configuration
+#  specification in NESL.
+
+set codefile = $4$5_code
+set outfile = $4$5_out
+
+set remote_interp = /tmp/vinterp
+set remote_codefile = /tmp/$5_code
+
+# Copy over the VCODE interpreter executable if it does not exist
+set command = 'echo $a'
+if (`$1 "@ a = ! -f $remote_interp; $command"`) then
+	echo -n "copying interp.."
+	cat $2 | $1 "cat > $remote_interp; chmod 755 $remote_interp"
+endif
+
+# Copy over the VCODE code file
+echo "copying code.."
+cat $codefile | $1 cat ">" $remote_codefile
+
+# Run the interpreter and redirect stdout to local file.
+$1 /tmp/vinterp -m $3 $remote_codefile > $outfile
